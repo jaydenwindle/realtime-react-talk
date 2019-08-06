@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import daytime from "./daytime.png";
 import nighttime from "./nighttime.png";
 
 import "./App.css";
 
-const API_URL = "http://localhost:4000/polling";
+const API_URL = "http://localhost:4000/sse";
 
 function App() {
   const [isDayTime, setIsDayTime] = useState(true);
   const backgroundColor = isDayTime ? "#efefef" : "#212121";
 
   useEffect(() => {
-    setInterval(async () => {
-      const response = await (await fetch(API_URL)).text();
-      setIsDayTime(response === "true");
-    }, 500);
+    const eventSource = new EventSource(API_URL);
+    eventSource.onmessage = event => setIsDayTime(event.data === "true");
+    return () => eventSource.close();
   }, []);
 
   return (

@@ -14,8 +14,7 @@ app.post("/polling", (req, res) => {
   res.send(lightOn);
 });
 
-const EventEmitter = require("events");
-const Stream = new EventEmitter();
+const PubSub = require("pubsub-js");
 
 app.get("/sse", (req, res) => {
   res.writeHead(200, {
@@ -26,13 +25,13 @@ app.get("/sse", (req, res) => {
 
   res.write(`data:${lightOn}\n\n`);
 
-  Stream.on("switch", function(event, data) {
+  PubSub.subscribe("daytime_nighttime", function(event, data) {
     res.write(`data:${lightOn}\n\n`);
   });
 });
 app.post("/sse", (req, res) => {
   lightOn = !lightOn;
-  Stream.emit("switch", lightOn.toString());
+  PubSub.publish("daytime_nighttime", lightOn.toString());
   res.send(lightOn);
 });
 
