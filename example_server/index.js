@@ -36,20 +36,25 @@ app.post("/sse", (req, res) => {
 });
 
 const WebSocket = require("ws");
-const wss = new WebSocket.Server({ port: 5000 });
+const ws_server = new WebSocket.Server({ port: 5000 });
 
-wss.on("connection", ws => {
+const GRID_DIMENSION = 10;
+const dayTimeArray = [...Array(GRID_DIMENSION)].map(x =>
+  Array(GRID_DIMENSION).fill(false)
+);
+
+ws_server.on("connection", ws => {
   ws.on("message", message => {
-    console.log(`Received message => ${message}`);
-    lightOn = message === "true";
-    Stream.emit("switch", lightOn);
+    const { row, column, isDayTime } = JSON.parse(message);
+
+    dayTimeArray[row][column] = isDayTime;
+
+    ws_server.clients.forEach(client =>
+      client.send(JSON.stringify(dayTimeArray))
+    );
   });
 
-  Stream.on("switch", function(event, data) {
-    ws.send(lightOn);
-  });
-
-  ws.send(lightOn);
+  ws.send(JSON.stringify(dayTimeArray));
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
